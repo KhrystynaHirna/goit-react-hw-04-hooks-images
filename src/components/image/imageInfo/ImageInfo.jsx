@@ -1,75 +1,61 @@
-import React, { Component } from "react";
+import { useEffect, useState } from 'react';
 import { ImagesService } from "../../api/Api";
 import { ImageGallery } from "../ImageGallery";
-import { Button } from "../../button/Button";
+import Button from "../../button/Button";
 import Modal from "../../modal/Modal";
 import Loader from "../../loader/Loader";
 import Searchbar from "components/searchbar/Searchbar";
 
 
-class ImageInfo extends Component {
-  state = {
-    input: "",
-    images: null,
-    enabled: false,
-    page: 1,
-    isShown: false,
-    largeImageURL: '',
-  }
+export default function ImageInfo() {
   
-  componentDidUpdate(prevProps, prevState) {
-    
-    if (this.state.input !== prevState.input) {
-      this.setState({images: null, enabled: true});
-      ImagesService(this.state.input, this.state.page)
+  const [input, setInput] = useState('');
+  const [images, setImages] = useState([]);
+  const [enabled, setEnabled] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isShown, setIsShown] = useState(false);
+  const [largeImageURL, setLargeImageURL] = useState('');
+
+   
+useEffect(() => {
+    if (input === '') {
+      return
+    };
+    setEnabled(true);
+      ImagesService(input, page)
         .then(images => {
-          this.setState({ images })
-        }).finally(() => this.setState({enabled: false}));
-    } 
-    
-     if (this.state.input === prevState.input && this.state.page !== prevState.page) {
-      this.setState({enabled: true});
-      ImagesService(this.state.input, this.state.page)
-        .then(images => {
-          this.setState({ images: [...prevState.images, ...images] });
-          }).finally(() => this.setState({enabled: false}));
-    }    
-  }
+          setImages(prev => [...prev, ...images]);
+          }).finally(() => setEnabled(false));
+}, [input, page])   
   
-  handleFormSubmit = (input) => {
-    this.setState({ input, page: 1 });
+  const handleFormSubmit = (input) => {
+    setInput(input);
+    setPage(1);
+    setImages([]);
   }
 
-  handleBtnClick = () => {
-    this.setState(state => ({
-      page: state.page + 1,
-    }))
+  const handleBtnClick = () => {
+   setPage(prev => prev + 1)
   }
 
-  toggleModal = () => {
-    this.setState(state => ({
-      isShown: !state.isShown
-    }))
+  const toggleModal = () => {
+    setIsShown(prev => !prev)
   }
   
-  openImage = (largeImageURL) => {
-    this.setState({ largeImageURL });
-    this.toggleModal();
+  const openImage = (largeImageURL) => {
+    setLargeImageURL(largeImageURL);
+    toggleModal();
   }
   
-  render() {
-    const { page, enabled, images, input, largeImageURL, isShown } = this.state;
     return (
       <div>
-        <Searchbar onSubmit={this.handleFormSubmit}/>
+        <Searchbar onSubmit={handleFormSubmit}/>
         {page === 1 && <Loader enabled={enabled} />}
-        {images && <ImageGallery images={images} alt={input} onClick={this.openImage}/>}    
+        {images && <ImageGallery images={images} alt={input} onClick={openImage}/>}    
         {page > 1 && <Loader enabled={enabled} />}
-        {images && images.length > 0 && <Button onClick={this.handleBtnClick} />}
-        {isShown && <Modal isShown={this.toggleModal} src={largeImageURL} alt={input}/>}
+        {images && images.length > 0 && <Button onClick={handleBtnClick} />}
+        {isShown && <Modal isShown={toggleModal} src={largeImageURL} alt={input}/>}
       </div>
     );
-  }
+  
 }
-
-export default ImageInfo;

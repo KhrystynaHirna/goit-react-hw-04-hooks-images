@@ -1,39 +1,38 @@
-import React, { Component } from "react";
+import { useEffect } from "react";
 import PropTypes from "prop-types";
+import { createPortal } from 'react-dom';
 import s from "./Modal.module.css";
 
+const modalRoot = document.querySelector('#modal-root');
 
-class Modal extends Component {
+export default function Modal({isShown, src, alt}) {
 
-  componentDidMount() {
-    window.addEventListener("keydown", this.onEscClick)
-  };
+  useEffect(() => {
+    window.addEventListener('keydown', onEscClick);
+    return () => window.removeEventListener('keydown', onEscClick)
+  })
 
-  componentWillUnmount() {
-    window.removeEventListener("keydown", this.onEscClick)
-  };
-  onEscClick = e => {
+  const onEscClick = e => {
     if (e.code === "Escape") {
-      this.props.isShown();
+      isShown();
     }
   };
-  onBgClick = e => {
+
+  const onBgClick = e => {
     if (e.currentTarget === e.target) {
-      this.props.isShown()
+      isShown()
     }
   };
 
-  render() {
-    const { src, alt } = this.props;
-
-    return (
-        <div className={s.Overlay} onClick={this.onBgClick}>
+    return createPortal(
+        <div className={s.Overlay} onClick={onBgClick}>
          <div className={s.Modal}>
            <img className={s.Image} src={src} alt={alt} />
          </div>
-      </div>
-      )}    
-}
+      </div>,
+      modalRoot
+      )   
+};
 
 Modal.propTypes = {
     isShown: PropTypes.func.isRequired,
@@ -41,4 +40,3 @@ Modal.propTypes = {
     alt: PropTypes.string.isRequired,
   };
 
-export default Modal;
